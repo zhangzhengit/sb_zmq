@@ -10,11 +10,11 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * 
+ *
  *
  * @author zhangzhen
  * @data Aug 7, 2020
- * 
+ *
  */
 @Data
 @Builder
@@ -32,7 +32,7 @@ public class ZMP implements Serializable, Delayed {
 	/**
 	 * ZMPTypeEnum.type
 	 */
-	private int type;
+	private Integer type;
 
 	private String topic;
 
@@ -52,10 +52,10 @@ public class ZMP implements Serializable, Delayed {
 	 * 具体的此消息推送时间点，此对象创建的时刻 + delayMilliSeconds。
 	 */
 	private long scheduledMilliSeconds;
-	
+
 	@Override
 	public int compareTo(final Delayed o) {
-		final long d1 = getDelay(TimeUnit.MILLISECONDS);
+		final long d1 = this.getDelay(TimeUnit.MILLISECONDS);
 		final long d2 = o.getDelay(TimeUnit.MILLISECONDS);
 		final int compare = Long.compare(d1, d2);
 		return compare;
@@ -63,7 +63,7 @@ public class ZMP implements Serializable, Delayed {
 
 	@Override
 	public long getDelay(final TimeUnit unit) {
-		final long c = unit.convert(scheduledMilliSeconds - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
+		final long c = unit.convert(this.scheduledMilliSeconds - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
 		return c;
 	}
 

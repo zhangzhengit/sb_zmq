@@ -1,22 +1,25 @@
 package com.vo;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.scheduling.annotation.EnableAsync;
+import com.vo.core.ZContext;
+import com.vo.socket.ZMQServer;
 
 /**
- * MQ
+ * MQ 启动类
  *
  * @author zhangzhen
  * @data Aug 7, 2020
  *
  */
-@EnableAsync
-@SpringBootApplication
 public class SbZmqApplication {
 
 	public static void main(final String[] args) {
-		SpringApplication.run(SbZmqApplication.class, args);
+		ZApplication.run("com.vo", args);
+
+		final ZMQServer server = new ZMQServer();
+		ZContext.addBean(ZMQServer.class, server);
+
+		server.start();
+
 	}
 
 }

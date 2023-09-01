@@ -6,11 +6,11 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * 
+ *
  *
  * @author zhangzhen
  * @data Aug 11, 2020
- * 
+ *
  */
 @Data
 @Builder

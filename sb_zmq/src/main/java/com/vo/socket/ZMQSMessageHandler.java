@@ -1,4 +1,4 @@
-package com.vo.netty;
+package com.vo.socket;
 
 import cn.hutool.core.collection.CollUtil;
 import com.google.common.collect.Maps;
@@ -13,11 +13,11 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 /**
- * 
+ *
  *
  * @author zhangzhen
  * @data Aug 10, 2020
- * 
+ *
  */
 @Component
 public class ZMQSMessageHandler {
@@ -26,25 +26,25 @@ public class ZMQSMessageHandler {
 	private final Vector<String> tv = new Vector<>();
 
 	public ConcurrentMap<String, BlockingQueue<ZMP>> getTopicMap() {
-		return topicMap;
+		return this.topicMap;
 	}
-	
+
 	private void addZMP(final ZMP zmp) {
 		zmp.setScheduledMilliSeconds(zmp.getDelayMilliSeconds() + System.currentTimeMillis());
 		final String topic = zmp.getTopic();
-		final BlockingQueue<ZMP> zmqQueue = topicMap.get(topic);
+		final BlockingQueue<ZMP> zmqQueue = this.topicMap.get(topic);
 		if (CollUtil.isEmpty(zmqQueue)) {
 			final BlockingQueue<ZMP> queue = new DelayQueue<>();
 			queue.add(zmp);
-			topicMap.put(topic, queue);
-			tv.add(topic);
+			this.topicMap.put(topic, queue);
+			this.tv.add(topic);
 		} else {
 			zmqQueue.add(zmp);
 		}
 
 		message(zmp);
 	}
-	
+
 	@Async
 	public ZMQSMRE handle(final ZMP zmp, final ChannelHandlerContext ctx) {
 		final ZMPTypeEnum e = ZMPTypeEnum.valueOfType(zmp.getType());
@@ -55,13 +55,13 @@ public class ZMQSMessageHandler {
 
 		switch (e) {
 		case INIT:
-			ZMQSMessageHandler.init(zmp.getTopic(), ctx);
+//			ZMQSMessageHandler.init(zmp.getTopic(), ctx);
 			return ZMQSMRE.SUCEESS;
-		
+
 		case MESSAGE:
 			this.addZMP(zmp);
 			return ZMQSMRE.SUCEESS;
-			
+
 		default:
 			break;
 		}
@@ -69,18 +69,19 @@ public class ZMQSMessageHandler {
 		return ZMQSMRE.SUCEESS;
 	}
 
-	private static void init(final String topic, final ChannelHandlerContext ctx) {
-		ZMQSClientManager.put(topic, ctx);
-	}
-
+//	private static void init(final String topic, final ChannelHandlerContext ctx) {
+//		ZMQSClientManager.put(topic, ctx);
+//	}
+//
 	private static void message(final ZMP zmp) {
-		final String topic = zmp.getTopic();
-		final ChannelHandlerContext ctx = ZMQSClientManager.getCTXByTopic(topic);
-		if (ctx == null) {
-			System.out.println("message.ctx is null,zmp.topic = " + topic);
-			return;
-		}
+//		final String topic = zmp.getTopic();
+//		final ChannelHandlerContext ctx = ZMQSClientManager.getCTXByTopic(topic);
+//		if (ctx == null) {
+//			System.out.println("message.ctx is null,zmp.topic = " + topic);
+//			return;
+//		}
 
-		ZMQSSender.send(zmp, ctx);
+//		ZMQSSender.send(zmp, ctx);
 	}
+
 }
