@@ -165,11 +165,22 @@ public class ZMQServer {
 			zmqQueue.add(zmp);
 		}
 
-		message(zmp);
+		ze.executeInQueue(() -> message(zmp));
 	}
 
 	static int sendN = 0;
+
+	static	com.votool.ze.ZE ze = ZES.newZE();
+	/**
+	 * 转发消息到topic的目标消费者
+	 *
+	 * @param message
+	 *
+	 */
 	private static void message(final ZMP message) {
+
+		System.out.println(
+				java.time.LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t" + "ZMQServer.message()");
 
 		final SocketChannel socketChannel = ZMQSClientManager.getSocketChannelByTopic(message.getTopic());
 		if (socketChannel == null) {
@@ -185,19 +196,12 @@ public class ZMQServer {
 			} catch (final IOException e) {
 				// FIXME 2023年9月1日 下午8:04:48 zhanghen: 发送失败，怎么处理？重连？
 				e.printStackTrace();
+				break;
 			}
 		}
 		sendN++;
 		System.out.println("server-message-sendN = " +sendN);
 
-//		final String topic = zmp.getTopic();
-//		final ChannelHandlerContext ctx = ZMQSClientManager.getCTXByTopic(topic);
-//		if (ctx == null) {
-//			System.out.println("message.ctx is null,zmp.topic = " + topic);
-//			return;
-//		}
-
-//		ZMQSSender.send(zmp, ctx);
 	}
 
 	private static ZMP handleRead(final SelectionKey key) {
@@ -212,39 +216,36 @@ public class ZMQServer {
 		// 2 读4字节，读长度的数据
 		final ByteBuffer lengthBuffer = ByteBuffer.allocate(LENGHT_);
 		try {
-			final int length = socketChannel.read(lengthBuffer);
-			if (length == -1) {
-				try {
-					socketChannel.close();
-					key.cancel();
-//				System.out.println("bytesRead == -1 | socketChannel.close();");
-				} catch (final IOException e) {
-					e.printStackTrace();
+			int lengthREAD = 0;
+			while (lengthREAD < LENGHT_) {
+				final int lengthT = socketChannel.read(lengthBuffer);
+				if (lengthT == -1) {
+					continue;
 				}
-				return null;
+				lengthREAD += lengthT;
 			}
-//			System.out.println("length = " + length);
 
-			if (length == LENGHT_) {
-				final byte[] lengthArray = lengthBuffer.array();
-				final int dataLength = ZPU.byteArrayToInt(lengthArray);
+			final byte[] lengthArray = lengthBuffer.array();
+			final int dataLength = ZPU.byteArrayToInt(lengthArray);
 //				System.out.println("dataLength = " + dataLength);
+			final ByteBuffer dataBuffer = ByteBuffer.allocate(dataLength);
 
-				if (dataLength > 0) {
-
-					final ByteBuffer dataBuffer = ByteBuffer.allocate(dataLength);
-					socketChannel.read(dataBuffer);
-					final byte[] dataArray = dataBuffer.array();
-					System.out.println("dataArray = " + Arrays.toString(dataArray));
-
-					final ZMP message = ZPU.deserialize(dataArray, ZMP.class);
-					System.out.println("message = " + message);
-
-//					message.setSocketChannel(socketChannel);
-
-					return message;
+			int dataLengthREAD = 0;
+			while (dataLengthREAD < dataLength) {
+				final int readT = socketChannel.read(dataBuffer);
+				if (readT == -1) {
+					continue;
 				}
+				dataLengthREAD += readT;
 			}
+
+			final byte[] dataArray = dataBuffer.array();
+			System.out.println("dataArray = " + Arrays.toString(dataArray));
+
+			final ZMP message = ZPU.deserialize(dataArray, ZMP.class);
+			System.out.println("message = " + message);
+
+			return message;
 
 		} catch (final IOException e1) {
 			e1.printStackTrace();
